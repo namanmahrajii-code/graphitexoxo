@@ -346,8 +346,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!audioEnabled || !bgMusic) return;
     initAudio();
 
-    if (bgMusic.paused) {
-      bgMusic.volume = 0.35;
+    bgMusic.volume = 0.35;
+    bgMusic.muted = false;
+
+    try {
       const playPromise = bgMusic.play();
       if (playPromise !== undefined) {
         playPromise.then(() => {
@@ -356,10 +358,12 @@ document.addEventListener('DOMContentLoaded', () => {
             clearInterval(bgmRetryInterval);
             bgmRetryInterval = null;
           }
+          if (iconSoundOn) iconSoundOn.style.display = 'block';
+          if (iconSoundOff) iconSoundOff.style.display = 'none';
         }).catch(() => {
-          // If browser temporarily blocks unmuted autoplay after intro,
+          // If browser temporarily blocks unmuted autoplay without prior gesture,
           // rapidly poll every 100ms so it starts the microsecond any interaction or focus occurs
-          if (!bgmRetryInterval) {
+          if (!bgmRetryInterval && !bgmAutoStarted) {
             let attempts = 0;
             bgmRetryInterval = setInterval(() => {
               attempts++;
@@ -380,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
       }
-    }
+    } catch (e) {}
   }
 
   function toggleLoFiSound() {
@@ -856,6 +860,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (sound === 'back') {
         playBackSound();
       }
+      startBgMusic();
       const currentClean = normalizeRoute(window.location.hash);
       if (currentClean === clean) {
         applyRoute(clean);
@@ -866,6 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Launching into category hub or sub-page: run mission dispatch transition
+    startBgMusic();
     playLaunchSound();
     runMissionTransition(clean, () => {
       const currentClean = normalizeRoute(window.location.hash);
@@ -945,6 +951,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Delegated Click Listeners
   document.addEventListener('click', (e) => {
+    // Unconditionally activate background music on any user click
+    if (!bgmAutoStarted && audioEnabled && bgMusic) {
+      startBgMusic();
+    }
+
     // Authentic Spider-Man Web Splat FX on any button or interactive element click
     const clickable = e.target.closest('button, .menu-item, .card, .back-to-menu-btn, .page-card, a, [data-route], [data-back-route], [data-action], .action-btn, .sound-btn, .fs-btn, .hud-btn, .control-btn');
     if (clickable) {
@@ -1173,9 +1184,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (audioEnabled) {
       initAudio();
       playLaunchSound();
-      if (bgMusic && bgMusic.paused) {
-        bgMusic.play().catch(() => {});
-      }
+      startBgMusic();
       if (iconSoundOn) iconSoundOn.style.display = 'block';
       if (iconSoundOff) iconSoundOff.style.display = 'none';
       if (soundLabel) soundLabel.textContent = 'SFX';
@@ -1613,13 +1622,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const triggerAutoAudio = () => {
     initAudio();
-    if (loadingFinished && bgMusic && bgMusic.paused && audioEnabled) {
+    if (!bgmAutoStarted && audioEnabled && bgMusic) {
       startBgMusic();
     }
   };
 
   PASSIVE_AUDIO_EVENTS.forEach(evt => {
-    window.addEventListener(evt, triggerAutoAudio, { passive: true });
-    document.addEventListener(evt, triggerAutoAudio, { passive: true });
+    window.addEventListener(evt, triggerAutoAudio, { capture: true, passive: true });
+    document.addEventListener(evt, triggerAutoAudio, { capture: true, passive: true });
   });
+
+  if (gameIntroLoader) {
+    ['pointerdown', 'touchstart', 'click'].forEach(evt => {
+      gameIntroLoader.addEventListener(evt, () => {
+        initAudio();
+      }, { passive: true });
+    });
+  }
 });
