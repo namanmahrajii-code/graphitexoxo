@@ -102,7 +102,7 @@ html, body {
   height: 100%;
   overflow: hidden;
   z-index: 1;
-  background-color: #020408;
+  background: #020408 url('preview_frame.jpg') center/cover no-repeat;
 }
 
 .loader-video-element {
@@ -112,7 +112,19 @@ html, body {
   height: 100%;
   object-fit: cover;
   pointer-events: none;
-  background-color: #020408;
+  background-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.loader-video-element::-webkit-media-controls,
+.loader-video-element::-webkit-media-controls-start-playback-button,
+.loader-video-element::-webkit-media-controls-play-button,
+.loader-video-element::-webkit-media-controls-panel {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
 }
 
 /* Film Vignette & Atmosphere */

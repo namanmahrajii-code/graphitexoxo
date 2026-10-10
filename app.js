@@ -1059,9 +1059,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (loaderVideo) {
     loaderVideo.muted = true;
     loaderVideo.defaultMuted = true;
+    loaderVideo.playsInline = true;
+    loaderVideo.setAttribute('playsinline', '');
+    loaderVideo.setAttribute('webkit-playsinline', '');
+    loaderVideo.setAttribute('x5-playsinline', '');
 
     const tryStartVideo = () => {
       if (loadingFinished) return;
+      loaderVideo.muted = true;
       const promise = loaderVideo.play();
       if (promise !== undefined) {
         promise.then(() => {
@@ -1069,7 +1074,14 @@ document.addEventListener('DOMContentLoaded', () => {
           isVideoMode = true;
           if (!videoStartTime) videoStartTime = performance.now();
         }).catch(() => {
-          // If browser policy blocks autoplay, fallback gracefully
+          // If mobile strictly requires a gesture, auto-unlock on first touch
+          const forceStart = () => {
+            loaderVideo.play().catch(() => {});
+            window.removeEventListener('touchstart', forceStart);
+            window.removeEventListener('touchend', forceStart);
+          };
+          window.addEventListener('touchstart', forceStart, { once: true, passive: true });
+          window.addEventListener('touchend', forceStart, { once: true, passive: true });
         });
       }
     };
@@ -1083,9 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loaderVideo.addEventListener('canplay', tryStartVideo, { once: true });
     loaderVideo.addEventListener('loadeddata', tryStartVideo, { once: true });
 
-    if (loaderVideo.readyState >= 2) {
-      tryStartVideo();
-    }
+    tryStartVideo();
 
     loaderVideo.addEventListener('ended', () => {
       finishLoadingSequence();
