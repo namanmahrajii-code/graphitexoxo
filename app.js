@@ -134,7 +134,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const bgMusic = document.getElementById('bgMusic');
   if (bgMusic) {
     bgMusic.volume = 0.35;
-    bgMusic.play().catch(() => {});
+    bgMusic.pause();
+    bgMusic.currentTime = 0;
   }
 
   // Mission Transition HUD Elements
@@ -338,11 +339,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 600);
   }
 
+  let bgmAutoStarted = false;
+  let bgmRetryInterval = null;
+
   function startBgMusic() {
     if (!audioEnabled || !bgMusic) return;
     initAudio();
+
     if (bgMusic.paused) {
-      bgMusic.play().then(() => {}).catch(() => {});
+      bgMusic.volume = 0.35;
+      const playPromise = bgMusic.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          bgmAutoStarted = true;
+          if (bgmRetryInterval) {
+            clearInterval(bgmRetryInterval);
+            bgmRetryInterval = null;
+          }
+        }).catch(() => {
+          // If browser temporarily blocks unmuted autoplay after intro,
+          // rapidly poll every 100ms so it starts the microsecond any interaction or focus occurs
+          if (!bgmRetryInterval) {
+            let attempts = 0;
+            bgmRetryInterval = setInterval(() => {
+              attempts++;
+              if (bgmAutoStarted || !audioEnabled || attempts > 60) {
+                clearInterval(bgmRetryInterval);
+                bgmRetryInterval = null;
+                return;
+              }
+              initAudio();
+              bgMusic.play().then(() => {
+                bgmAutoStarted = true;
+                if (bgmRetryInterval) {
+                  clearInterval(bgmRetryInterval);
+                  bgmRetryInterval = null;
+                }
+              }).catch(() => {});
+            }, 100);
+          }
+        });
+      }
     }
   }
 
@@ -1564,18 +1601,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
-  // Ensure Background Music and Web Audio Autoplay
-  const ensureAutoAudio = () => {
+  // Universal Passive Audio Activation — Unlocks music on ANY interaction
+  // (swipe, thumb touch, mouse move, scroll, key, or tap) without waiting for any button click!
+  const PASSIVE_AUDIO_EVENTS = [
+    'pointerdown', 'pointerup', 'pointermove',
+    'touchstart', 'touchend', 'touchmove',
+    'mousedown', 'mouseup', 'mousemove',
+    'wheel', 'scroll', 'keydown', 'keyup',
+    'focus', 'click'
+  ];
+
+  const triggerAutoAudio = () => {
     initAudio();
-    if (bgMusic && bgMusic.paused && audioEnabled) {
-      bgMusic.play().then(() => {
-        ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
-          window.removeEventListener(evt, ensureAutoAudio);
-        });
-      }).catch(() => {});
+    if (loadingFinished && bgMusic && bgMusic.paused && audioEnabled) {
+      startBgMusic();
     }
   };
-  ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
-    window.addEventListener(evt, ensureAutoAudio, { passive: true });
+
+  PASSIVE_AUDIO_EVENTS.forEach(evt => {
+    window.addEventListener(evt, triggerAutoAudio, { passive: true });
+    document.addEventListener(evt, triggerAutoAudio, { passive: true });
   });
 });
