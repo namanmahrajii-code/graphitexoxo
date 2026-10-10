@@ -2730,11 +2730,41 @@ kbd {
   pointer-events: none;
 }
 
+.transition-video-container {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: 1;
+  background: #020408;
+}
+
+.countdown-clock {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: var(--accent-cyan);
+  background: rgba(0, 210, 255, 0.08);
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+  text-shadow: 0 0 8px rgba(0, 210, 255, 0.5);
+  white-space: nowrap;
+}
+
+.countdown-clock.live {
+  color: var(--accent-green);
+  border-color: rgba(0, 255, 170, 0.4);
+  box-shadow: 0 0 14px rgba(0, 255, 170, 0.25);
+}
+
 .transition-cinematic-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(14, 25, 45, 0.65) 0%, rgba(3, 5, 9, 0.98) 85%);
-  z-index: 1;
+  background: radial-gradient(circle at center, rgba(14, 25, 45, 0.4) 0%, rgba(3, 5, 9, 0.88) 85%);
+  z-index: 2;
+  pointer-events: none;
 }
 
 .transition-grid-overlay {

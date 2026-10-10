@@ -140,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Mission Transition HUD Elements
   const missionTransitionScreen = document.getElementById('missionTransitionScreen');
+  const transVideo = document.getElementById('transVideo');
   const transBadgeText = document.getElementById('transBadgeText');
   const transDestTitle = document.getElementById('transDestTitle');
   const transDestSub = document.getElementById('transDestSub');
@@ -788,14 +789,24 @@ document.addEventListener('DOMContentLoaded', () => {
     missionTransitionScreen.classList.add('active');
     missionTransitionScreen.setAttribute('aria-hidden', 'false');
 
+    if (transVideo) {
+      transVideo.muted = true;
+      transVideo.currentTime = 0;
+      const p = transVideo.play();
+      if (p !== undefined) p.catch(() => {});
+    }
+
     isMissionTransitioning = true;
     const startTime = performance.now();
-    const DURATION = 2200; // ~2.2 seconds
+    const DEFAULT_TRANSITION_MS = 6350; // 6.35s matching IMG_0458
 
     function completeTransition() {
       if (!isMissionTransitioning) return;
       isMissionTransitioning = false;
       if (missionTransitionAnimId) cancelAnimationFrame(missionTransitionAnimId);
+      if (transVideo) {
+        transVideo.pause();
+      }
 
       if (transPctValue) transPctValue.textContent = '100';
       if (transCircleFill) transCircleFill.style.strokeDashoffset = '0';
@@ -822,12 +833,27 @@ document.addEventListener('DOMContentLoaded', () => {
       };
     }
 
+    if (transVideo) {
+      transVideo.onended = () => {
+        completeTransition();
+      };
+    }
+
     function transitionStep(now) {
       if (!isMissionTransitioning) return;
-      const elapsed = now - startTime;
-      const rawPct = Math.min(100, (elapsed / DURATION) * 100);
+      
+      let rawPct = 0;
+      if (transVideo && transVideo.duration > 0 && !isNaN(transVideo.duration) && transVideo.currentTime > 0) {
+        rawPct = (transVideo.currentTime / transVideo.duration) * 100;
+        if (transVideo.ended || transVideo.currentTime >= transVideo.duration - 0.12) {
+          rawPct = 100;
+        }
+      } else {
+        const elapsed = now - startTime;
+        rawPct = Math.min(100, (elapsed / DEFAULT_TRANSITION_MS) * 100);
+      }
 
-      const currentPct = Math.floor(rawPct);
+      const currentPct = Math.min(100, Math.floor(rawPct));
       if (transPctValue) transPctValue.textContent = currentPct;
 
       if (transCircleFill) {
@@ -1228,15 +1254,32 @@ document.addEventListener('DOMContentLoaded', () => {
   if (fsToggle) fsToggle.addEventListener('click', toggleFullscreen);
 
   // ==========================================
-  // 14. REAL-TIME CLOCK
+  // 14. GRAPHITE '26 LAUNCH COUNTDOWN TIMER
   // ==========================================
+  // Target: October 27, 2026, 09:00:00 IST (Bhimtal, India +05:30)
+  const EVENT_TARGET_MS = new Date('2026-10-27T09:00:00+05:30').getTime();
+
   function updateHUDClocks() {
     if (!systemClock) return;
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, '0');
-    const mm = String(now.getMinutes()).padStart(2, '0');
-    const ss = String(now.getSeconds()).padStart(2, '0');
-    systemClock.textContent = `${hh}:${mm}:${ss}`;
+    const now = Date.now();
+    const diff = EVENT_TARGET_MS - now;
+
+    if (diff <= 0) {
+      systemClock.textContent = 'EVENT LIVE // ACTIVE';
+      systemClock.classList.add('live');
+      return;
+    }
+
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / (1000 * 60)) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+
+    const padH = String(hours).padStart(2, '0');
+    const padM = String(minutes).padStart(2, '0');
+    const padS = String(seconds).padStart(2, '0');
+
+    systemClock.textContent = `T-${days}D ${padH}:${padM}:${padS}`;
   }
 
   setInterval(updateHUDClocks, 1000);

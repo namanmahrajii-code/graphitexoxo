@@ -78,12 +78,20 @@
        AAA CINEMATIC MISSION DISPATCH & PAGE TRANSITION SCREEN
        ======================================================== -->
   <aside class="mission-transition-screen" id="missionTransitionScreen" aria-label="Mission Dispatch Transition" aria-hidden="true">
-    <div class="transition-cinematic-bg"></div>
-    <div class="transition-grid-overlay"></div>
-    <div class="transition-vignette"></div>
-    <div class="transition-scanlines"></div>
-    <div class="transition-letterbox transition-letterbox-top"></div>
-    <div class="transition-letterbox transition-letterbox-bottom"></div>
+    <div class="loader-video-container transition-video-container">
+      <video id="transVideo" class="loader-video-element" playsinline webkit-playsinline x5-playsinline muted preload="auto" disablepictureinpicture disableremoteplayback>
+        <source src="IMG_0458_1080p.mp4" type="video/mp4">
+        <source src="IMG_0458.MOV" type="video/quicktime">
+        <source src="IMG_0458.MP4" type="video/mp4">
+      </video>
+      <div class="loader-cinematic-vignette"></div>
+      <div class="transition-cinematic-bg"></div>
+      <div class="transition-grid-overlay"></div>
+      <div class="transition-vignette"></div>
+      <div class="transition-scanlines"></div>
+      <div class="transition-letterbox transition-letterbox-top"></div>
+      <div class="transition-letterbox transition-letterbox-bottom"></div>
+    </div>
 
     <!-- Center Mission HUD Banner -->
     <div class="transition-center-hud">
@@ -238,8 +246,8 @@
             <span class="btn-label">FULL</span>
           </button>
 
-          <!-- Understated Digital Clock -->
-          <div class="hud-clock" id="systemClock">00:00:00</div>
+          <!-- GRAPHITE '26 Launch Countdown Timer -->
+          <div class="hud-clock countdown-clock" id="systemClock" title="Countdown to GRAPHITE '26 Launch (27 Oct 2026)">T-16D 00:00:00</div>
         </div>
       </div>
     </header>
