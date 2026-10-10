@@ -134,6 +134,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const bgMusic = document.getElementById('bgMusic');
   if (bgMusic) {
     bgMusic.volume = 0.35;
+    bgMusic.play().catch(() => {});
   }
 
   // State
@@ -1211,16 +1212,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { passive: true });
   }
 
-  // Unlock Web Audio
-  const unlockAudio = () => {
+  // Ensure Background Music and Web Audio Autoplay
+  const ensureAutoAudio = () => {
     initAudio();
-    if (loadingFinished) {
-      startBgMusic();
+    if (bgMusic && bgMusic.paused && audioEnabled) {
+      bgMusic.play().then(() => {
+        ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+          window.removeEventListener(evt, ensureAutoAudio);
+        });
+      }).catch(() => {});
     }
   };
-  window.addEventListener('click', unlockAudio, { once: true });
-  window.addEventListener('keydown', unlockAudio, { once: true });
-  window.addEventListener('pointerdown', unlockAudio, { once: true });
-  window.addEventListener('touchstart', unlockAudio, { once: true });
-  window.addEventListener('touchend', unlockAudio, { once: true });
+  ['click', 'touchstart', 'touchend', 'pointerdown', 'keydown'].forEach(evt => {
+    window.addEventListener(evt, ensureAutoAudio, { passive: true });
+  });
 });
