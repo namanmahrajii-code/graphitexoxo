@@ -461,7 +461,7 @@ html, body {
 
 .bg-stage {
   position: fixed;
-  inset: 0;
+  inset: -35px;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
@@ -469,19 +469,18 @@ html, body {
 
 .bg-layer {
   position: absolute;
-  inset: -25px;
+  inset: -15px;
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
   opacity: 0;
-  transform: scale(1.04);
-  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translate3d(var(--bg-px, 0px), var(--bg-py, 0px), 0) scale(1.05);
+  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
 .bg-layer.active {
   opacity: 1;
-  transform: scale(1);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -537,6 +536,8 @@ html, body {
   inset: 0;
   z-index: 10;
   pointer-events: none;
+  transform: translate3d(var(--web-px, 0px), var(--web-py, 0px), 0);
+  will-change: transform;
 }
 
 .corner-web {
@@ -2593,4 +2594,331 @@ kbd {
   .countdown-digits.big .cd-num {
     font-size: 1.25rem;
   }
+}
+
+/* ==========================================================================
+   10. SPIDERWEB CLICK & TOUCH FX (PROCEDURAL SPIDER-BURST)
+   ========================================================================== */
+.spiderweb-fx-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99999;
+  overflow: hidden;
+}
+
+.web-splat-burst {
+  position: absolute;
+  width: 140px;
+  height: 140px;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: webBurstAnim 0.58s cubic-bezier(0.15, 1, 0.3, 1) forwards;
+}
+
+.web-splat-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.web-splat-spokes line {
+  stroke: #ffffff;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.95));
+}
+
+.web-splat-rings path {
+  fill: none;
+  stroke: rgba(220, 245, 255, 0.92);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 6px rgba(255, 42, 59, 0.65));
+}
+
+.web-splat-core {
+  fill: #ffffff;
+  filter: drop-shadow(0 0 12px #00d2ff) drop-shadow(0 0 20px #ff2a3b);
+  animation: webCoreFlash 0.32s ease-out forwards;
+}
+
+.web-splat-ring-ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 1.8px solid rgba(0, 210, 255, 0.95);
+  box-shadow: 0 0 16px rgba(0, 210, 255, 0.8), inset 0 0 10px rgba(255, 42, 59, 0.4);
+  transform: translate(-50%, -50%);
+  animation: webRippleExpand 0.55s cubic-bezier(0.1, 0.85, 0.3, 1) forwards;
+}
+
+@keyframes webBurstAnim {
+  0% {
+    transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+    opacity: 0.95;
+  }
+  35% {
+    transform: translate(-50%, -50%) scale(1.18) rotate(12deg);
+    opacity: 1;
+  }
+  70% {
+    transform: translate(-50%, -50%) scale(1.02) rotate(16deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.25) rotate(22deg);
+    opacity: 0;
+    filter: blur(1.5px);
+  }
+}
+
+@keyframes webRippleExpand {
+  0% {
+    width: 8px;
+    height: 8px;
+    opacity: 1;
+  }
+  100% {
+    width: 175px;
+    height: 175px;
+    opacity: 0;
+    border-width: 0.5px;
+  }
+}
+
+@keyframes webCoreFlash {
+  0% { transform: scale(1.8); opacity: 1; }
+  100% { transform: scale(0.3); opacity: 0; }
+}
+
+/* ==========================================================================
+   11. AAA CINEMATIC MISSION DISPATCH & PAGE TRANSITION SCREEN
+   ========================================================================== */
+.mission-transition-screen {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9500;
+  background-color: #030509;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(0%);
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              visibility 0.32s;
+  will-change: transform, opacity;
+}
+
+.mission-transition-screen.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.mission-transition-screen.slide-up {
+  transform: translateY(-100%);
+  transition: transform 0.72s cubic-bezier(0.77, 0, 0.175, 1);
+  pointer-events: none;
+}
+
+.transition-cinematic-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at center, rgba(14, 25, 45, 0.65) 0%, rgba(3, 5, 9, 0.98) 85%);
+  z-index: 1;
+}
+
+.transition-grid-overlay {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    linear-gradient(rgba(0, 210, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 210, 255, 0.05) 1px, transparent 1px);
+  background-size: 40px 40px;
+  opacity: 0.75;
+  z-index: 2;
+  animation: gridDrift 20s linear infinite;
+}
+
+@keyframes gridDrift {
+  0% { background-position: 0 0; }
+  100% { background-position: 40px 40px; }
+}
+
+.transition-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(2, 4, 8, 0.7) 75%, rgba(2, 4, 8, 0.98) 100%);
+  z-index: 3;
+}
+
+.transition-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(to bottom, transparent 0px, transparent 2px, rgba(0, 0, 0, 0.28) 2px, rgba(0, 0, 0, 0.28) 4px);
+  opacity: 0.55;
+  z-index: 4;
+}
+
+.transition-letterbox {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: clamp(20px, 3.5vh, 40px);
+  background: #000000;
+  z-index: 5;
+}
+.transition-letterbox-top {
+  top: 0;
+  border-bottom: 1px solid rgba(255, 42, 59, 0.35);
+}
+.transition-letterbox-bottom {
+  bottom: 0;
+  border-top: 1px solid rgba(0, 210, 255, 0.35);
+}
+
+/* Center Mission HUD Banner */
+.transition-center-hud {
+  position: absolute;
+  top: 48%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  text-align: center;
+  width: 90%;
+  max-width: 680px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.transition-top-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(6, 12, 22, 0.82);
+  border: 1px solid rgba(0, 210, 255, 0.4);
+  padding: 6px 16px;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 20px rgba(0, 210, 255, 0.15);
+}
+
+.transition-chip-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-cyan);
+  box-shadow: 0 0 10px var(--accent-cyan);
+  animation: transPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes transPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(0.7); opacity: 0.4; }
+}
+
+.transition-chip-text {
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  letter-spacing: 2px;
+  color: var(--accent-cyan);
+  font-weight: 700;
+}
+
+.transition-dest-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.4rem, 6vw, 4.4rem);
+  letter-spacing: 4px;
+  color: #ffffff;
+  text-transform: uppercase;
+  margin: 0 0 0.5rem;
+  line-height: 1.05;
+  text-shadow: 0 0 25px rgba(255, 42, 59, 0.5), 0 0 45px rgba(0, 210, 255, 0.25);
+  animation: titleGlowGlitch 2s ease-in-out infinite;
+}
+
+@keyframes titleGlowGlitch {
+  0%, 100% { text-shadow: 0 0 25px rgba(255, 42, 59, 0.5), 0 0 45px rgba(0, 210, 255, 0.25); }
+  50% { text-shadow: 0 0 35px rgba(0, 210, 255, 0.7), 0 0 60px rgba(255, 42, 59, 0.4); }
+}
+
+.transition-dest-sub {
+  font-family: var(--font-mono);
+  font-size: clamp(0.78rem, 1.6vw, 0.95rem);
+  letter-spacing: 2.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* Radar Sweep Ring in Background */
+.transition-radar-sweep {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 210, 255, 0.12);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.transition-radar-sweep::after {
+  content: '';
+  position: absolute;
+  inset: 30px;
+  border-radius: 50%;
+  border: 1px dashed rgba(255, 42, 59, 0.12);
+}
+
+/* Bottom Controls in Transition */
+.transition-bottom-actions {
+  position: absolute;
+  bottom: clamp(24px, 4.5vh, 44px);
+  left: clamp(24px, 4.5vw, 52px);
+  z-index: 10;
+}
+
+.transition-skip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(6, 12, 22, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 16px;
+  border-radius: 4px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.transition-skip-btn:hover {
+  background: rgba(255, 42, 59, 0.2);
+  border-color: var(--accent-red);
+  color: #ffffff;
+  transform: translateY(-2px);
+}
+
+.transition-dock-right {
+  position: absolute;
+  bottom: clamp(24px, 4.5vh, 44px);
+  right: clamp(24px, 4.5vw, 52px);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }

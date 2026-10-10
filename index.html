@@ -75,6 +75,65 @@
   </aside>
 
   <!-- ========================================================
+       AAA CINEMATIC MISSION DISPATCH & PAGE TRANSITION SCREEN
+       ======================================================== -->
+  <aside class="mission-transition-screen" id="missionTransitionScreen" aria-label="Mission Dispatch Transition" aria-hidden="true">
+    <div class="transition-cinematic-bg"></div>
+    <div class="transition-grid-overlay"></div>
+    <div class="transition-vignette"></div>
+    <div class="transition-scanlines"></div>
+    <div class="transition-letterbox transition-letterbox-top"></div>
+    <div class="transition-letterbox transition-letterbox-bottom"></div>
+
+    <!-- Center Mission HUD Banner -->
+    <div class="transition-center-hud">
+      <div class="transition-top-chip">
+        <span class="transition-chip-pulse"></span>
+        <span class="transition-chip-text" id="transBadgeText">MISSION DISPATCH PROTOCOL // SPIDER-SUIT OS</span>
+      </div>
+      <h2 class="transition-dest-title" id="transDestTitle">START HACKATHON</h2>
+      <div class="transition-dest-sub" id="transDestSub">INITIALIZING SECURE TERMINAL LINK</div>
+      <div class="transition-radar-sweep" aria-hidden="true">
+        <div class="radar-line"></div>
+        <div class="radar-crosshair"></div>
+      </div>
+    </div>
+
+    <!-- Bottom Left: Skip Control Hint -->
+    <div class="transition-bottom-actions">
+      <button class="transition-skip-btn" id="transSkipBtn" type="button" aria-label="Skip Mission Transition">
+        <span class="skip-key-badge">SPACE / ESC</span>
+        <span class="skip-btn-label">SKIP TO PAGE</span>
+      </button>
+    </div>
+
+    <!-- Bottom-Right: AAA HUD Loading Indicator & Circular Progress -->
+    <div class="loader-dock-right transition-dock-right" id="transDockRight">
+      <div class="loader-telemetry">
+        <div class="loader-telemetry-title" id="transStatusPhase">CALIBRATING PROTOCOLS...</div>
+        <div class="loader-telemetry-sub" id="transStatusDetail">GRAPHITE '26 // GEHU BHIMTAL</div>
+      </div>
+
+      <!-- Circular Progress Spinner -->
+      <div class="loader-circle-box" aria-hidden="true">
+        <svg class="loader-circle-svg" viewBox="0 0 48 48">
+          <circle class="loader-circle-track" cx="24" cy="24" r="20"></circle>
+          <circle class="loader-circle-fill" id="transCircleFill" cx="24" cy="24" r="20"></circle>
+        </svg>
+        <div class="loader-circle-reticle"></div>
+      </div>
+
+      <!-- Percentage Counter Display -->
+      <div class="loader-percentage-box">
+        <span class="loader-pct-value" id="transPctValue">0</span><span class="loader-pct-symbol">%</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Interactive Spiderweb Click/Touch Burst Layer -->
+  <div id="spiderwebFxLayer" class="spiderweb-fx-layer" aria-hidden="true"></div>
+
+  <!-- ========================================================
        BACKGROUND STAGE (DUAL-BUFFER FOR SMOOTH CROSSFADE)
        ======================================================== -->
   <div class="bg-stage" id="bgStage">

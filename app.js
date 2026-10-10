@@ -137,6 +137,21 @@ document.addEventListener('DOMContentLoaded', () => {
     bgMusic.play().catch(() => {});
   }
 
+  // Mission Transition HUD Elements
+  const missionTransitionScreen = document.getElementById('missionTransitionScreen');
+  const transBadgeText = document.getElementById('transBadgeText');
+  const transDestTitle = document.getElementById('transDestTitle');
+  const transDestSub = document.getElementById('transDestSub');
+  const transStatusPhase = document.getElementById('transStatusPhase');
+  const transStatusDetail = document.getElementById('transStatusDetail');
+  const transCircleFill = document.getElementById('transCircleFill');
+  const transPctValue = document.getElementById('transPctValue');
+  const transDockRight = document.getElementById('transDockRight');
+  const transSkipBtn = document.getElementById('transSkipBtn');
+
+  // Spiderweb FX Layer
+  const spiderwebFxLayer = document.getElementById('spiderwebFxLayer');
+
   // State
   let currentIndex = 0;
   let currentLayer = 'A';
@@ -238,6 +253,89 @@ document.addEventListener('DOMContentLoaded', () => {
       osc.start(now);
       osc.stop(now + 0.16);
     } catch (e) {}
+  }
+
+  function playThwipSound() {
+    if (!audioEnabled) return;
+    try {
+      initAudio();
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+
+      // 1. High-tension web string snap (frequency plunge)
+      const osc = audioCtx.createOscillator();
+      const oscGain = audioCtx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(1750, now);
+      osc.frequency.exponentialRampToValueAtTime(160, now + 0.12);
+      oscGain.gain.setValueAtTime(0.18, now);
+      oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+      osc.connect(oscGain);
+      oscGain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.13);
+
+      // 2. High-pressure web spray noise burst
+      const bufferSize = Math.floor(audioCtx.sampleRate * 0.09);
+      const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+      const output = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        output[i] = Math.random() * 2 - 1;
+      }
+      const whiteNoise = audioCtx.createBufferSource();
+      whiteNoise.buffer = buffer;
+
+      const filter = audioCtx.createBiquadFilter();
+      filter.type = 'bandpass';
+      filter.frequency.setValueAtTime(3600, now);
+      filter.frequency.exponentialRampToValueAtTime(700, now + 0.09);
+      filter.Q.setValueAtTime(3.2, now);
+
+      const noiseGain = audioCtx.createGain();
+      noiseGain.gain.setValueAtTime(0.22, now);
+      noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.09);
+
+      whiteNoise.connect(filter);
+      filter.connect(noiseGain);
+      noiseGain.connect(audioCtx.destination);
+      whiteNoise.start(now);
+    } catch (e) {}
+  }
+
+  function spawnSpiderwebBurst(x, y) {
+    if (!spiderwebFxLayer) return;
+    playThwipSound();
+
+    const burst = document.createElement('div');
+    burst.className = 'web-splat-burst';
+    burst.style.left = `${x}px`;
+    burst.style.top = `${y}px`;
+
+    burst.innerHTML = `
+      <svg class="web-splat-svg" viewBox="0 0 100 100" fill="none" stroke="currentColor">
+        <line x1="50" y1="50" x2="50" y2="2" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="84" y2="16" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="98" y2="50" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="84" y2="84" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="50" y2="98" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="16" y2="84" stroke-width="2" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="2" y2="50" stroke-width="2.5" stroke-linecap="round"/>
+        <line x1="50" y1="50" x2="16" y2="16" stroke-width="2" stroke-linecap="round"/>
+        <polygon points="50,14 75,25 86,50 75,75 50,86 25,75 14,50 25,25" stroke-width="1.8" fill="rgba(255,255,255,0.06)"/>
+        <polygon points="50,28 66,34 72,50 66,66 50,72 34,66 28,50 34,34" stroke-width="1.6" fill="rgba(255,42,59,0.12)"/>
+        <polygon points="50,39 58,42 61,50 58,58 50,61 42,58 39,50 42,42" stroke-width="1.4"/>
+        <circle cx="50" cy="50" r="4.5" fill="#ffffff" stroke="#ff2a3b" stroke-width="2"/>
+      </svg>
+      <div class="web-splat-ripple"></div>
+    `;
+
+    spiderwebFxLayer.appendChild(burst);
+
+    setTimeout(() => {
+      if (burst.parentNode) {
+        burst.parentNode.removeChild(burst);
+      }
+    }, 600);
   }
 
   function startBgMusic() {
@@ -516,24 +614,230 @@ document.addEventListener('DOMContentLoaded', () => {
     return clean;
   }
 
+  const MISSION_TELEMETRY = {
+    'start': {
+      badge: 'CATEGORY 01 // MISSION BRIEFING',
+      title: 'START HACKATHON',
+      subtitle: 'GE GRAPHITE 2026 // HACKATHON PROTOCOLS & TRACK BRIEFINGS',
+      phases: [
+        'INITIALIZING MISSION DIRECTIVES...',
+        'ALLOCATING 24-HOUR HACKATHON PROTOCOLS...',
+        'LOADING TRACK SPECS & SUBMISSION PIPELINE...',
+        'CALIBRATING JUDGING MATRIX & SPIDER-SUIT HUD...',
+        'DISPATCH READY // ENTERING HACKATHON HUB'
+      ],
+      details: [
+        'Connecting to GE Bhimtal Mainframe...',
+        'Synchronizing Web3, AI, and Autonomous Systems tracks...',
+        'Validating team allocation and submission criteria...',
+        'Finalizing hardware kits and cloud credits handshake...',
+        'Hackathon command deck initialized.'
+      ]
+    },
+    'story': {
+      badge: 'CATEGORY 02 // NARRATIVE ARCHIVE',
+      title: 'STORY MODE',
+      subtitle: 'FROM PETER PARKER TO BHIMTAL // THE GRAPHITE SAGA',
+      phases: [
+        'DECRYPTING ARCHIVAL NARRATIVE DATABASE...',
+        'RECONSTRUCTING SPIDER-VERSE ORIGIN LOGS...',
+        'TRACING BHIMTAL HIMALAYAN TECH ROOTS...',
+        'RENDERING CHARACTER TIMELINE & LEGACY...',
+        'ARCHIVE UNLOCKED // ACCESSING STORY MODE'
+      ],
+      details: [
+        'Reading encrypted Daily Bugle audio reels...',
+        'Compiling Spider-Verse temporal anomalies...',
+        'Aligning Himalayan mountain tech node data...',
+        'Synthesizing legacy codex from 2018-2026...',
+        'Narrative archive ready for inspection.'
+      ]
+    },
+    'press': {
+      badge: 'CATEGORY 03 // PRESS CLEARANCE',
+      title: 'DAILY BUGLE PRESS PASS',
+      subtitle: 'OFFICIAL ANNOUNCEMENTS, PRIZE POOLS & MEDIA LOGS',
+      phases: [
+        'CONNECTING TO BUGLE NEWSROOM FEED...',
+        'FETCHING PRIZE VAULT LEDGER & CERTIFICATES...',
+        'STREAMING MENTOR NETWORK AVAILABILITY...',
+        'VERIFYING ACCREDITATION & BROADCAST LINK...',
+        'PRESS CLEARANCE GRANTED // OPENING WIRE'
+      ],
+      details: [
+        'Tuning in to J. Jonah Jameson frequency...',
+        'Confirming ₹2,50,000+ prize pool allocation...',
+        'Syncing mentor roster across top tech firms...',
+        'Establishing Discord & official Bugle uplink...',
+        'Newsroom dispatch verified.'
+      ]
+    },
+    'crunch': {
+      badge: 'CATEGORY 04 // REAL-TIME OPS',
+      title: 'CRUNCH MODE // LOAD STATE',
+      subtitle: 'SCHEDULE CRUNCH, GIT PROTOCOLS & SUBMISSION TERMINAL',
+      phases: [
+        'PINGING BHIMTAL CRUNCH TIMELINE NODES...',
+        'INITIALIZING GIT COMMIT RECOVERY BUFFER...',
+        'AUDITING EVALUATION RUBRICS & CHECKPOINTS...',
+        'PRE-FLIGHT REPOSITORY HEALTH AUDIT...',
+        'CRUNCH TERMINAL ARMED // ENGAGING HUB'
+      ],
+      details: [
+        'Synchronizing 24h countdown clocks...',
+        'Inspecting GitHub repository commit protocols...',
+        'Loading Round 1 and Round 2 judge checkpoints...',
+        'Verifying pre-flight checklists and slide decks...',
+        'Crunch load state fully active.'
+      ]
+    },
+    'chill': {
+      badge: 'CATEGORY 05 // SANCTUARY RETREAT',
+      title: 'CHILL ZONE // WEB HAMMOCK',
+      subtitle: 'HIMALAYAN WORKSHOPS, AMBIENT LO-FI & FACILITIES',
+      phases: [
+        'RESONATING HIMALAYAN CHILL FREQUENCY...',
+        'TUNING WEB HAMMOCK RELAXATION MATRIX...',
+        'LOCATING CAMPUS WORKSHOPS & REST ROOMS...',
+        'GENERATING LO-FI ACOUSTIC FIELD...',
+        'SANCTUARY GRANTED // ENTERING CHILL ZONE'
+      ],
+      details: [
+        'Bhimtal mountain breeze audio simulation...',
+        'Mapping recreation zones, dining, and coffee refill hubs...',
+        'Loading packing checklists and travel route maps...',
+        'Calibrating lo-fi ambient frequency generator...',
+        'Web Hammock sanctuary primed.'
+      ]
+    }
+  };
+
+  let isMissionTransitioning = false;
+  let missionTransitionAnimId = null;
+
+  function runMissionTransition(targetRoute, onComplete) {
+    if (!missionTransitionScreen) {
+      onComplete();
+      return;
+    }
+
+    const parts = targetRoute.split('/');
+    const catKey = parts[0] || 'start';
+    const tele = MISSION_TELEMETRY[catKey] || MISSION_TELEMETRY['start'];
+    const cfg = ROUTE_CONFIG[targetRoute] || {};
+
+    let destTitle = tele.title;
+    if (targetRoute.includes('/')) {
+      const subKey = parts.slice(1).join(' ').replace(/-/g, ' ').toUpperCase();
+      destTitle = subKey;
+    }
+
+    if (transBadgeText) transBadgeText.textContent = tele.badge;
+    if (transDestTitle) transDestTitle.textContent = destTitle;
+    if (transDestSub) transDestSub.textContent = tele.subtitle;
+
+    if (transPctValue) transPctValue.textContent = '0';
+    if (transCircleFill) transCircleFill.style.strokeDashoffset = '125.66';
+    if (transStatusPhase) transStatusPhase.textContent = tele.phases[0];
+    if (transStatusDetail) transStatusDetail.textContent = tele.details[0];
+    if (transDockRight) transDockRight.classList.remove('ready');
+
+    missionTransitionScreen.classList.remove('slide-up');
+    missionTransitionScreen.classList.add('active');
+    missionTransitionScreen.setAttribute('aria-hidden', 'false');
+
+    isMissionTransitioning = true;
+    const startTime = performance.now();
+    const DURATION = 2200; // ~2.2 seconds
+
+    function completeTransition() {
+      if (!isMissionTransitioning) return;
+      isMissionTransitioning = false;
+      if (missionTransitionAnimId) cancelAnimationFrame(missionTransitionAnimId);
+
+      if (transPctValue) transPctValue.textContent = '100';
+      if (transCircleFill) transCircleFill.style.strokeDashoffset = '0';
+      if (transStatusPhase) transStatusPhase.textContent = tele.phases[4];
+      if (transStatusDetail) transStatusDetail.textContent = tele.details[4];
+      if (transDockRight) transDockRight.classList.add('ready');
+
+      setTimeout(() => {
+        playSlideUpSound();
+        missionTransitionScreen.classList.add('slide-up');
+        setTimeout(() => {
+          missionTransitionScreen.classList.remove('active');
+          missionTransitionScreen.classList.remove('slide-up');
+          missionTransitionScreen.setAttribute('aria-hidden', 'true');
+        }, 750);
+        onComplete();
+      }, 180);
+    }
+
+    if (transSkipBtn) {
+      transSkipBtn.onclick = (e) => {
+        e.stopPropagation();
+        completeTransition();
+      };
+    }
+
+    function transitionStep(now) {
+      if (!isMissionTransitioning) return;
+      const elapsed = now - startTime;
+      const rawPct = Math.min(100, (elapsed / DURATION) * 100);
+
+      const currentPct = Math.floor(rawPct);
+      if (transPctValue) transPctValue.textContent = currentPct;
+
+      if (transCircleFill) {
+        const offset = 125.66 - (125.66 * (rawPct / 100));
+        transCircleFill.style.strokeDashoffset = Math.max(0, offset);
+      }
+
+      const phaseIdx = Math.min(4, Math.floor(rawPct / 20));
+      if (transStatusPhase) transStatusPhase.textContent = tele.phases[phaseIdx];
+      if (transStatusDetail) transStatusDetail.textContent = tele.details[phaseIdx];
+
+      if (rawPct >= 100) {
+        completeTransition();
+      } else {
+        missionTransitionAnimId = requestAnimationFrame(transitionStep);
+      }
+    }
+
+    missionTransitionAnimId = requestAnimationFrame(transitionStep);
+  }
+
   function navigateToRoute(route, sound = 'launch') {
     if (isExitModalOpen) {
       closeExitModal();
     }
 
     const clean = normalizeRoute(route);
-    if (sound === 'launch') {
-      playLaunchSound();
-    } else if (sound === 'back') {
-      playBackSound();
+
+    // If navigating back to main menu, explicit back, or exit modal, navigate immediately
+    if (!clean || sound === 'back' || clean === 'exit') {
+      if (sound === 'back') {
+        playBackSound();
+      }
+      const currentClean = normalizeRoute(window.location.hash);
+      if (currentClean === clean) {
+        applyRoute(clean);
+      } else {
+        window.location.hash = clean ? '#/' + clean : '#/';
+      }
+      return;
     }
 
-    const currentClean = normalizeRoute(window.location.hash);
-    if (currentClean === clean) {
-      applyRoute(clean);
-    } else {
-      window.location.hash = clean ? '#/' + clean : '#/';
-    }
+    // Launching into category hub or sub-page: run mission dispatch transition
+    playLaunchSound();
+    runMissionTransition(clean, () => {
+      const currentClean = normalizeRoute(window.location.hash);
+      if (currentClean === clean) {
+        applyRoute(clean);
+      } else {
+        window.location.hash = clean ? '#/' + clean : '#/';
+      }
+    });
   }
 
   function applyRoute(route) {
@@ -604,6 +908,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Delegated Click Listeners
   document.addEventListener('click', (e) => {
+    // Authentic Spider-Man Web Splat FX on any button or interactive element click
+    const clickable = e.target.closest('button, .menu-item, .card, .back-to-menu-btn, .page-card, a, [data-route], [data-back-route], [data-action], .action-btn, .sound-btn, .fs-btn, .hud-btn, .control-btn');
+    if (clickable) {
+      let clickX = e.clientX;
+      let clickY = e.clientY;
+      if (!clickX && !clickY) {
+        const rect = clickable.getBoundingClientRect();
+        clickX = rect.left + rect.width / 2;
+        clickY = rect.top + rect.height / 2;
+      }
+      spawnSpiderwebBurst(clickX, clickY);
+    }
+
     if (isExitModalOpen) {
       const insideModal = e.target.closest('#exitModalOverlay');
       if (!insideModal) {
@@ -939,15 +1256,47 @@ document.addEventListener('DOMContentLoaded', () => {
     renderParticles();
   }
 
-  // Mouse parallax tilt on background (Desktop only)
+  // ==========================================
+  // 15B. BUTTERY 60FPS BACKGROUND PARALLAX LERP
+  // ==========================================
+  let targetParallaxX = 0;
+  let targetParallaxY = 0;
+  let currentParallaxX = 0;
+  let currentParallaxY = 0;
+
   window.addEventListener('mousemove', (e) => {
-    if (window.innerWidth <= 768) return;
-    const mouseX = (e.clientX / window.innerWidth - 0.5) * 8;
-    const mouseY = (e.clientY / window.innerHeight - 0.5) * 8;
-    
-    bgLayerA.style.transform = `scale(1.02) translate(${mouseX * 0.3}px, ${mouseY * 0.3}px)`;
-    bgLayerB.style.transform = `scale(1.02) translate(${mouseX * 0.3}px, ${mouseY * 0.3}px)`;
-  });
+    // Normalized [-1, 1] relative to viewport center
+    const normX = (e.clientX / window.innerWidth) * 2 - 1;
+    const normY = (e.clientY / window.innerHeight) * 2 - 1;
+    targetParallaxX = normX;
+    targetParallaxY = normY;
+  }, { passive: true });
+
+  window.addEventListener('deviceorientation', (e) => {
+    if (e.gamma !== null && e.beta !== null) {
+      targetParallaxX = Math.max(-1, Math.min(1, e.gamma / 25));
+      targetParallaxY = Math.max(-1, Math.min(1, (e.beta - 40) / 25));
+    }
+  }, { passive: true });
+
+  function updateParallaxLoop() {
+    currentParallaxX += (targetParallaxX - currentParallaxX) * 0.055;
+    currentParallaxY += (targetParallaxY - currentParallaxY) * 0.055;
+
+    // Background moves opposite for immersive depth illusion
+    const bgPx = (-currentParallaxX * 18).toFixed(2);
+    const bgPy = (-currentParallaxY * 18).toFixed(2);
+    const webPx = (currentParallaxX * 10).toFixed(2);
+    const webPy = (currentParallaxY * 10).toFixed(2);
+
+    document.documentElement.style.setProperty('--bg-px', `${bgPx}px`);
+    document.documentElement.style.setProperty('--bg-py', `${bgPy}px`);
+    document.documentElement.style.setProperty('--web-px', `${webPx}px`);
+    document.documentElement.style.setProperty('--web-py', `${webPy}px`);
+
+    requestAnimationFrame(updateParallaxLoop);
+  }
+  requestAnimationFrame(updateParallaxLoop);
 
   // ==========================================
   // 16. AAA CINEMATIC INTRO VIDEO & LOADING SCREEN CONTROLLER
@@ -1054,6 +1403,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!loadingFinished && (e.code === 'Space' || e.key === 'Escape' || e.key === ' ')) {
       e.preventDefault();
       skipLoadingSequence();
+    } else if (isMissionTransitioning && (e.code === 'Space' || e.key === 'Escape' || e.key === ' ')) {
+      e.preventDefault();
+      if (transSkipBtn) transSkipBtn.click();
     }
   });
 
