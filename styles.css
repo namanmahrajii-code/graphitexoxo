@@ -466,13 +466,20 @@ html, body {
   background-repeat: no-repeat;
   opacity: 0;
   transform: scale(1.04);
-  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.95s cubic-bezier(0.16, 1, 0.3, 1), transform 1.25s cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, transform;
 }
 
 .bg-layer.active {
   opacity: 1;
   transform: scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg-layer {
+    transition: opacity 0.2s ease !important;
+    transform: none !important;
+  }
 }
 
 /* Carefully Tuned Left-to-Right Dark Overlay (Preserves Hero Character on Right) */

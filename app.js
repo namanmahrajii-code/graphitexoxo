@@ -290,13 +290,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 4. PRELOAD ASSETS
+  // 4. PRELOAD ASSETS WITH ASYNC DECODE
   // ==========================================
   const preloadedImages = {};
   MENU_ITEMS_DATA.forEach(item => {
     if (item.bgImage && !preloadedImages[item.bgImage]) {
       const img = new Image();
       img.src = item.bgImage;
+      if (img.decode) {
+        img.decode().catch(() => {});
+      }
       preloadedImages[item.bgImage] = img;
     }
   });
@@ -312,6 +315,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeLayer = currentLayer === 'A' ? bgLayerA : bgLayerB;
     const nextLayer = currentLayer === 'A' ? bgLayerB : bgLayerA;
 
+    // Avoid redundant fade if active layer already displays this image
+    if (activeLayer.style.backgroundImage && activeLayer.style.backgroundImage.includes(imageUrl)) {
+      return;
+    }
+
     nextLayer.style.backgroundImage = `url('${imageUrl}')`;
     
     requestAnimationFrame(() => {
@@ -322,7 +330,81 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 6. MENU SELECTION CONTROLLER (MAIN VIEW)
+  // 6. DEVICE-AWARE CINEMATIC BACKGROUND ROTATION
+  // ==========================================
+  const ROTATION_ITEMS = MENU_ITEMS_DATA.slice(0, 5); // Start, Story, Press, Crunch, Chill
+  let mobileRotationIndex = 0;
+  let mobileRotationTimer = null;
+  const ROTATION_INTERVAL_MS = 4600; // ~4.6 seconds between cinematic transitions
+
+  const finePointerQuery = window.matchMedia('(hover: hover) and (pointer: fine)');
+  const coarsePointerQuery = window.matchMedia('(hover: none) and (pointer: coarse)');
+  const reducedMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+  let hasRecentMouseInput = false;
+  let mouseInputTimeout = null;
+
+  // Track real pointer events to cleanly support hybrid touch laptops
+  window.addEventListener('pointermove', (e) => {
+    if (e.pointerType === 'mouse') {
+      hasRecentMouseInput = true;
+      if (mouseInputTimeout) clearTimeout(mouseInputTimeout);
+      mouseInputTimeout = setTimeout(() => {
+        hasRecentMouseInput = false;
+      }, 5000);
+    }
+  }, { passive: true });
+
+  function isTouchOriented() {
+    // True if touch-oriented device without active mouse hover
+    if (coarsePointerQuery.matches) return true;
+    if (finePointerQuery.matches && !hasRecentMouseInput && window.innerWidth <= 1024) return true;
+    if (finePointerQuery.matches && window.innerWidth > 1024) return false;
+    return ('ontouchstart' in window || navigator.maxTouchPoints > 0) && window.innerWidth <= 1024;
+  }
+
+  function startMobileRotation() {
+    stopMobileRotation();
+
+    // Do not rotate if desktop mouse is active, if reduced motion is preferred, or if off main menu
+    if (!isTouchOriented()) return;
+    if (reducedMotionQuery.matches) return;
+    if (currentRoute || isExitModalOpen || !loadingFinished || document.hidden) return;
+
+    mobileRotationTimer = setTimeout(() => {
+      if (currentRoute || isExitModalOpen || !loadingFinished || document.hidden) return;
+
+      // Advance to next existing category background in sequence
+      mobileRotationIndex = (mobileRotationIndex + 1) % ROTATION_ITEMS.length;
+      const nextItem = ROTATION_ITEMS[mobileRotationIndex];
+      if (nextItem && nextItem.bgImage) {
+        setBackgroundImage(nextItem.bgImage);
+      }
+
+      startMobileRotation();
+    }, ROTATION_INTERVAL_MS);
+  }
+
+  function stopMobileRotation() {
+    if (mobileRotationTimer) {
+      clearTimeout(mobileRotationTimer);
+      mobileRotationTimer = null;
+    }
+  }
+
+  // Pause rotation when tab is hidden, resume when tab is active
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopMobileRotation();
+    } else {
+      if (!currentRoute && !isExitModalOpen && loadingFinished) {
+        startMobileRotation();
+      }
+    }
+  });
+
+  // ==========================================
+  // 7. MENU SELECTION CONTROLLER
   // ==========================================
   function selectMenuItem(index, playSound = true) {
     if (index < 0 || index >= MENU_ITEMS_DATA.length) return;
@@ -351,10 +433,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Unified user selection (hover on desktop, tap on mobile)
+  function onUserSelectMenuItem(index, isHover = false) {
+    selectMenuItem(index, isHover);
+
+    // Keep rotation synchronized with user's selected category
+    if (index >= 0 && index < ROTATION_ITEMS.length) {
+      mobileRotationIndex = index;
+    }
+
+    // Reset rotation timer so the selected background stays visible for full duration
+    if (isTouchOriented() && !currentRoute && !isExitModalOpen) {
+      startMobileRotation();
+    }
+  }
+
   // ==========================================
-  // 7. EXPLICIT EXIT CONSOLE MODAL CONTROLS
+  // 8. EXPLICIT EXIT CONSOLE MODAL CONTROLS
   // ==========================================
   function openExitModal() {
+    stopMobileRotation();
     playLaunchSound();
     isExitModalOpen = true;
     if (exitModalOverlay) {
@@ -377,6 +475,9 @@ document.addEventListener('DOMContentLoaded', () => {
           exitModalOverlay.style.display = 'none';
         }
       }, 220);
+    }
+    if (!currentRoute && loadingFinished) {
+      startMobileRotation();
     }
   }
 
@@ -405,7 +506,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 8. MULTI-LEVEL ROUTER & DEDICATED PAGES
+  // 9. MULTI-LEVEL ROUTER & DEDICATED PAGES
   // ==========================================
   function normalizeRoute(route) {
     if (!route) return '';
@@ -441,7 +542,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const clean = normalizeRoute(route);
 
-    // If route is explicitly exit
     if (clean === 'exit') {
       openExitModal();
       return;
@@ -462,23 +562,25 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         selectMenuItem(currentIndex, false);
       }
+
+      // Resume mobile rotation when returning to Main Menu
+      startMobileRotation();
       return;
     }
 
-    // Active Category Hub or Sub-Page
+    // Entering a Category Hub or Sub-Page: Stop main-menu rotation
+    stopMobileRotation();
+
     currentRoute = clean;
     if (cfg.index !== undefined) {
       selectMenuItem(cfg.index, false);
     }
 
-    // Hide main menu shell cleanly
     mainMenuShell.classList.add('menu-hidden');
 
-    // Show pages overlay container
     pagesContainer.classList.add('active');
     pagesContainer.setAttribute('aria-hidden', 'false');
 
-    // Activate specific page and scroll to top
     const targetElement = document.getElementById(cfg.pageId);
     detailPages.forEach(p => {
       const isTarget = p === targetElement;
@@ -501,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Delegated Click Listeners
   document.addEventListener('click', (e) => {
-    // If exit modal is open, ignore clicks outside the modal
     if (isExitModalOpen) {
       const insideModal = e.target.closest('#exitModalOverlay');
       if (!insideModal) {
@@ -541,17 +642,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Main menu hover preview
+  // Main menu hover preview (Desktop) & Touch preview (Mobile)
   menuItems.forEach((btn, idx) => {
+    // Desktop mouseenter: immediate preview
     btn.addEventListener('mouseenter', () => {
       if (currentIndex !== idx && !currentRoute && !isExitModalOpen) {
-        selectMenuItem(idx, true);
+        onUserSelectMenuItem(idx, true);
       }
     });
+
+    // Touch interaction: immediately preview tapped button's background image
+    btn.addEventListener('touchstart', () => {
+      if (!currentRoute && !isExitModalOpen) {
+        onUserSelectMenuItem(idx, false);
+      }
+    }, { passive: true });
   });
 
   // ==========================================
-  // 9. INTERACTIVE FEATURES & DEMOS
+  // 10. INTERACTIVE FEATURES & DEMOS
   // ==========================================
   if (pageCopySpecsBtn) {
     pageCopySpecsBtn.addEventListener('click', () => {
@@ -593,7 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 10. TOAST NOTIFICATIONS
+  // 11. TOAST NOTIFICATIONS
   // ==========================================
   function showToast(message) {
     if (toastTimer) clearTimeout(toastTimer);
@@ -606,10 +715,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================
-  // 11. KEYBOARD CONTROLS & SHORTCUTS
+  // 12. KEYBOARD CONTROLS & SHORTCUTS
   // ==========================================
   window.addEventListener('keydown', (e) => {
-    // If intro loading screen is running, Space/Enter/Escape skips directly to main menu
     if (!loadingFinished) {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'Escape') {
         e.preventDefault();
@@ -618,7 +726,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Modal is currently open
     if (isExitModalOpen) {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -634,10 +741,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Escape Key Hierarchy:
-    // If in Sub-Page -> return to Category Hub
-    // If in Category Hub -> return to Main Menu
-    // If on Main Menu -> open Exit Console Confirmation Modal
     if (e.key === 'Escape') {
       e.preventDefault();
       if (currentRoute) {
@@ -650,7 +753,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // While on Main Menu (currentRoute === '')
     if (!currentRoute) {
       switch (e.key) {
         case 'ArrowUp':
@@ -658,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'W':
           e.preventDefault();
           const prevIndex = (currentIndex - 1 + MENU_ITEMS_DATA.length) % MENU_ITEMS_DATA.length;
-          selectMenuItem(prevIndex, true);
+          onUserSelectMenuItem(prevIndex, true);
           break;
 
         case 'ArrowDown':
@@ -666,7 +768,7 @@ document.addEventListener('DOMContentLoaded', () => {
         case 'S':
           e.preventDefault();
           const nextIndex = (currentIndex + 1) % MENU_ITEMS_DATA.length;
-          selectMenuItem(nextIndex, true);
+          onUserSelectMenuItem(nextIndex, true);
           break;
 
         case 'Enter':
@@ -689,7 +791,7 @@ document.addEventListener('DOMContentLoaded', () => {
         case '5':
           const num = parseInt(e.key, 10) - 1;
           if (num >= 0 && num < 5) {
-            selectMenuItem(num, true);
+            onUserSelectMenuItem(num, true);
             navigateToRoute(MENU_ITEMS_DATA[num].route, 'launch');
           }
           break;
@@ -701,7 +803,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Global HUD hotkeys
     if (e.key === 'm' || e.key === 'M') {
       toggleSound();
     } else if (e.key === 'f' || e.key === 'F') {
@@ -710,7 +811,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 12. HUD SOUND & FULLSCREEN TOGGLE
+  // 13. HUD SOUND & FULLSCREEN TOGGLE
   // ==========================================
   function toggleSound() {
     audioEnabled = !audioEnabled;
@@ -762,7 +863,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (fsToggle) fsToggle.addEventListener('click', toggleFullscreen);
 
   // ==========================================
-  // 13. REAL-TIME CLOCK
+  // 14. REAL-TIME CLOCK
   // ==========================================
   function updateHUDClocks() {
     if (!systemClock) return;
@@ -777,7 +878,7 @@ document.addEventListener('DOMContentLoaded', () => {
   updateHUDClocks();
 
   // ==========================================
-  // 14. SUBTLE AMBIENT PARTICLE DUST
+  // 15. SUBTLE AMBIENT PARTICLE DUST
   // ==========================================
   const canvas = document.getElementById('particleCanvas');
   if (canvas) {
@@ -789,6 +890,9 @@ document.addEventListener('DOMContentLoaded', () => {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
       selectMenuItem(currentIndex, false);
+      if (!currentRoute && !isExitModalOpen && loadingFinished) {
+        startMobileRotation();
+      }
     });
 
     const particles = [];
@@ -834,7 +938,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderParticles();
   }
 
-  // Mouse parallax tilt on background
+  // Mouse parallax tilt on background (Desktop only)
   window.addEventListener('mousemove', (e) => {
     if (window.innerWidth <= 768) return;
     const mouseX = (e.clientX / window.innerWidth - 0.5) * 8;
@@ -845,7 +949,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ==========================================
-  // 15. AAA CINEMATIC INTRO VIDEO & LOADING SCREEN CONTROLLER
+  // 16. AAA CINEMATIC INTRO VIDEO & LOADING SCREEN CONTROLLER
   // ==========================================
   const gameIntroLoader = document.getElementById('gameIntroLoader');
   const loaderVideo = document.getElementById('loaderVideo');
@@ -916,6 +1020,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (window.location.hash) {
         applyRoute(window.location.hash);
+      } else {
+        // Start mobile cinematic background rotation if on main menu
+        startMobileRotation();
       }
 
       setTimeout(() => {
