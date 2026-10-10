@@ -961,10 +961,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const CIRCLE_CIRCUMFERENCE = 125.66;
   const INTRO_DURATION_MS = 3800;
-  let introStartTime = performance.now();
   let loadingFinished = false;
   let displayedProgress = 0;
   let animFrameId = null;
+  let videoStarted = false;
+  let isVideoMode = false;
+  let pageLoadTime = performance.now();
+  let videoStartTime = 0;
 
   function playSlideUpSound() {
     try {
@@ -1033,7 +1036,7 @@ document.addEventListener('DOMContentLoaded', () => {
           loaderVideo.pause();
         }
       }, 1000);
-    }, 180);
+    }, 220);
   }
 
   function skipLoadingSequence() {
@@ -1046,8 +1049,44 @@ document.addEventListener('DOMContentLoaded', () => {
     loaderSkipBtn.addEventListener('click', skipLoadingSequence);
   }
 
+  window.addEventListener('keydown', (e) => {
+    if (!loadingFinished && (e.code === 'Space' || e.key === 'Escape' || e.key === ' ')) {
+      e.preventDefault();
+      skipLoadingSequence();
+    }
+  });
+
   if (loaderVideo) {
-    loaderVideo.play().catch(() => {});
+    loaderVideo.muted = true;
+    loaderVideo.defaultMuted = true;
+
+    const tryStartVideo = () => {
+      if (loadingFinished) return;
+      const promise = loaderVideo.play();
+      if (promise !== undefined) {
+        promise.then(() => {
+          videoStarted = true;
+          isVideoMode = true;
+          if (!videoStartTime) videoStartTime = performance.now();
+        }).catch(() => {
+          // If browser policy blocks autoplay, fallback gracefully
+        });
+      }
+    };
+
+    loaderVideo.addEventListener('playing', () => {
+      videoStarted = true;
+      isVideoMode = true;
+      if (!videoStartTime) videoStartTime = performance.now();
+    });
+
+    loaderVideo.addEventListener('canplay', tryStartVideo, { once: true });
+    loaderVideo.addEventListener('loadeddata', tryStartVideo, { once: true });
+
+    if (loaderVideo.readyState >= 2) {
+      tryStartVideo();
+    }
+
     loaderVideo.addEventListener('ended', () => {
       finishLoadingSequence();
     });
@@ -1056,18 +1095,37 @@ document.addEventListener('DOMContentLoaded', () => {
   function updateLoadingProgress(timestamp) {
     if (loadingFinished) return;
 
-    const elapsed = timestamp - introStartTime;
     let targetProgress = 0;
 
-    if (loaderVideo && loaderVideo.duration > 0 && !isNaN(loaderVideo.duration)) {
-      const vidRatio = (loaderVideo.currentTime / loaderVideo.duration) * 100;
-      const timeRatio = (elapsed / INTRO_DURATION_MS) * 100;
-      targetProgress = Math.max(vidRatio, timeRatio);
+    if (loaderVideo && isVideoMode && loaderVideo.duration > 0 && !isNaN(loaderVideo.duration)) {
+      // Driven by actual video playback progress: full duration is guaranteed!
+      const duration = loaderVideo.duration;
+      const current = loaderVideo.currentTime;
+      targetProgress = (current / duration) * 100;
+
+      // When video is almost finished (within 0.1s of end) or has ended
+      if (current >= duration - 0.1 || loaderVideo.ended) {
+        targetProgress = 100;
+      }
+    } else if (!videoStarted) {
+      const waitElapsed = timestamp - pageLoadTime;
+      if (waitElapsed < 1400) {
+        // While waiting for video to initialize, gently advance initial telemetry (up to 15%)
+        targetProgress = (waitElapsed / 1400) * 15;
+      } else {
+        // Fallback: If video failed or cannot play after 1.4s, smoothly complete loader
+        const fallbackElapsed = waitElapsed - 1400;
+        targetProgress = 15 + (fallbackElapsed / INTRO_DURATION_MS) * 85;
+      }
     } else {
+      // Fallback timer
+      const elapsed = timestamp - (videoStartTime || pageLoadTime);
       targetProgress = (elapsed / INTRO_DURATION_MS) * 100;
     }
 
     targetProgress = Math.min(100, Math.max(0, targetProgress));
+    
+    // Smooth progress interpolation
     displayedProgress += (targetProgress - displayedProgress) * 0.22;
     if (targetProgress >= 99.4) {
       displayedProgress = 100;
@@ -1105,11 +1163,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Safety watchdog: ensure page is NEVER stuck even if tab throttled or video stalled
+  setTimeout(() => {
+    if (!loadingFinished) {
+      finishLoadingSequence();
+    }
+  }, 6500);
+
   // Initialize main menu
   selectMenuItem(0, false);
 
   // Start smooth progress loop
-  introStartTime = performance.now();
+  pageLoadTime = performance.now();
   animFrameId = requestAnimationFrame(updateLoadingProgress);
 
   // Mobile Swipe-Right-to-Return Gesture
