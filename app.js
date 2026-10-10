@@ -343,7 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let bgmRetryInterval = null;
 
   function startBgMusic() {
-    if (!audioEnabled || !bgMusic) return;
+    // STRICT RULE: Music must ONLY play AFTER intro video has fully finished!
+    if (!loadingFinished || !audioEnabled || !bgMusic) return;
     initAudio();
 
     bgMusic.volume = 0.35;
@@ -951,8 +952,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Global Delegated Click Listeners
   document.addEventListener('click', (e) => {
-    // Unconditionally activate background music on any user click
-    if (!bgmAutoStarted && audioEnabled && bgMusic) {
+    // Unconditionally activate background music on any user click ONLY after intro has finished
+    if (loadingFinished && !bgmAutoStarted && audioEnabled && bgMusic) {
       startBgMusic();
     }
 
@@ -1622,6 +1623,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const triggerAutoAudio = () => {
     initAudio();
+    // STRICT RULE: Background music must ONLY start AFTER the intro video sequence has finished!
+    if (!loadingFinished) return;
     if (!bgmAutoStarted && audioEnabled && bgMusic) {
       startBgMusic();
     }
