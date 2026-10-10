@@ -151,6 +151,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const transDockRight = document.getElementById('transDockRight');
   const transSkipBtn = document.getElementById('transSkipBtn');
 
+  // Sub-Page Gentle 1-Second Fade Transition Overlay
+  const subpageFadeOverlay = document.getElementById('subpageFadeOverlay');
+  let isSubTransitioning = false;
+
   // Spiderweb FX Layer
   const spiderwebFxLayer = document.getElementById('spiderwebFxLayer');
 
@@ -875,39 +879,77 @@ document.addEventListener('DOMContentLoaded', () => {
     missionTransitionAnimId = requestAnimationFrame(transitionStep);
   }
 
-  function navigateToRoute(route, sound = 'launch') {
+  function runSubpageFadeTransition(targetRoute, onComplete) {
+    if (isSubTransitioning || isMissionTransitioning) {
+      if (typeof onComplete === 'function') onComplete();
+      return;
+    }
+    isSubTransitioning = true;
+
+    if (subpageFadeOverlay) {
+      subpageFadeOverlay.classList.remove('fading-out');
+      subpageFadeOverlay.classList.add('active');
+    }
+
+    // Gentle fade out phase (420ms)
+    setTimeout(() => {
+      if (typeof onComplete === 'function') {
+        onComplete();
+      }
+
+      // Smooth fade in phase to reveal destination (520ms)
+      if (subpageFadeOverlay) {
+        subpageFadeOverlay.classList.remove('active');
+        subpageFadeOverlay.classList.add('fading-out');
+      }
+
+      setTimeout(() => {
+        if (subpageFadeOverlay) {
+          subpageFadeOverlay.classList.remove('fading-out');
+        }
+        isSubTransitioning = false;
+      }, 520);
+    }, 420);
+  }
+
+  function navigateToRoute(route, sound = 'launch', isMainMenuLaunch = false) {
     if (isExitModalOpen) {
       closeExitModal();
     }
 
     const clean = normalizeRoute(route);
 
-    // If navigating back to main menu, explicit back, or exit modal, navigate immediately
-    if (!clean || sound === 'back' || clean === 'exit') {
-      if (sound === 'back') {
-        playBackSound();
-      }
-      startBgMusic();
-      const currentClean = normalizeRoute(window.location.hash);
-      if (currentClean === clean) {
-        applyRoute(clean);
-      } else {
-        window.location.hash = clean ? '#/' + clean : '#/';
-      }
+    if (clean === 'exit') {
+      openExitModal();
       return;
     }
 
-    // Launching into category hub or sub-page: run mission dispatch transition
+    if (sound === 'back') {
+      playBackSound();
+    } else {
+      playLaunchSound();
+    }
     startBgMusic();
-    playLaunchSound();
-    runMissionTransition(clean, () => {
+
+    const doApplyRoute = () => {
       const currentClean = normalizeRoute(window.location.hash);
       if (currentClean === clean) {
         applyRoute(clean);
       } else {
         window.location.hash = clean ? '#/' + clean : '#/';
       }
-    });
+    };
+
+    // ONLY the 5 main menu buttons clicked directly from the Main Menu shell
+    // trigger the cinematic video loading screen
+    if (isMainMenuLaunch && ['start', 'story', 'press', 'crunch', 'chill'].includes(clean)) {
+      runMissionTransition(clean, doApplyRoute);
+      return;
+    }
+
+    // For ALL sub-buttons inside pages, category hubs, sub-links, back buttons:
+    // Execute a gentle 1-second fade transition
+    runSubpageFadeTransition(clean, doApplyRoute);
   }
 
   function applyRoute(route) {
@@ -1020,7 +1062,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (targetRoute === 'exit') {
         openExitModal();
       } else {
-        navigateToRoute(targetRoute, 'launch');
+        // Only the top-level 5 main menu buttons clicked directly from the main menu shell
+        // trigger the video loading screen. All sub-buttons use the gentle 1s fade transition.
+        const isMainMenuBtn = routeTrigger.classList.contains('menu-item') && !currentRoute;
+        if (isMainMenuBtn) {
+          const itemIdx = parseInt(routeTrigger.getAttribute('data-index'), 10);
+          if (!isNaN(itemIdx)) {
+            onUserSelectMenuItem(itemIdx, false);
+          }
+        }
+        navigateToRoute(targetRoute, 'launch', isMainMenuBtn);
       }
       return;
     }
@@ -1030,7 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (backTrigger) {
       e.preventDefault();
       const backRoute = backTrigger.getAttribute('data-back-route');
-      navigateToRoute(backRoute, 'back');
+      navigateToRoute(backRoute, 'back', false);
       return;
     }
   });
@@ -1172,7 +1223,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (curItem.action === 'exit-console') {
               openExitModal();
             } else if (curItem.route) {
-              navigateToRoute(curItem.route, 'launch');
+              navigateToRoute(curItem.route, 'launch', true);
             }
           }
           break;
@@ -1185,7 +1236,7 @@ document.addEventListener('DOMContentLoaded', () => {
           const num = parseInt(e.key, 10) - 1;
           if (num >= 0 && num < 5) {
             onUserSelectMenuItem(num, true);
-            navigateToRoute(MENU_ITEMS_DATA[num].route, 'launch');
+            navigateToRoute(MENU_ITEMS_DATA[num].route, 'launch', true);
           }
           break;
 

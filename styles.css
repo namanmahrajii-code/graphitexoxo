@@ -127,13 +127,13 @@ html, body {
   pointer-events: none !important;
 }
 
-/* Film Vignette & Atmosphere */
+/* Film Vignette & Atmosphere (Refined 25% lighter for artwork clarity) */
 .loader-cinematic-vignette {
   position: absolute;
   inset: 0;
   background: 
-    radial-gradient(ellipse at center, transparent 35%, rgba(2, 4, 8, 0.55) 75%, rgba(2, 4, 8, 0.96) 100%),
-    linear-gradient(to bottom, rgba(2, 4, 8, 0.7) 0%, transparent 20%, transparent 80%, rgba(2, 4, 8, 0.88) 100%);
+    radial-gradient(ellipse at center, transparent 42%, rgba(2, 4, 8, 0.40) 78%, rgba(2, 4, 8, 0.70) 100%),
+    linear-gradient(to bottom, rgba(2, 4, 8, 0.52) 0%, transparent 22%, transparent 78%, rgba(2, 4, 8, 0.65) 100%);
   pointer-events: none;
   z-index: 2;
 }
@@ -490,14 +490,14 @@ html, body {
   }
 }
 
-/* Carefully Tuned Left-to-Right Dark Overlay (Preserves Hero Character on Right) */
+/* Carefully Tuned Left-to-Right Dark Overlay (25% lighter, preserves artwork & hero character) */
 .bg-vignette {
   position: absolute;
   inset: 0;
   background: 
-    linear-gradient(to right, rgba(4, 6, 12, 0.88) 0%, rgba(4, 6, 12, 0.62) 36%, rgba(4, 6, 12, 0.18) 72%, rgba(4, 6, 12, 0.35) 100%),
-    linear-gradient(to bottom, rgba(4, 6, 12, 0.75) 0%, transparent 15%, transparent 85%, rgba(4, 6, 12, 0.85) 100%),
-    radial-gradient(ellipse at 75% 50%, transparent 45%, rgba(3, 5, 10, 0.7) 100%);
+    linear-gradient(to right, rgba(4, 6, 12, 0.82) 0%, rgba(4, 6, 12, 0.54) 36%, rgba(4, 6, 12, 0.12) 72%, rgba(4, 6, 12, 0.22) 100%),
+    linear-gradient(to bottom, rgba(4, 6, 12, 0.55) 0%, transparent 18%, transparent 82%, rgba(4, 6, 12, 0.65) 100%),
+    radial-gradient(ellipse at 75% 50%, transparent 55%, rgba(3, 5, 10, 0.48) 100%);
   pointer-events: none;
   z-index: 1;
 }
@@ -1072,8 +1072,9 @@ kbd {
 .page-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(5, 8, 15, 0.88);
+  background: rgba(5, 8, 15, 0.74);
   backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 1;
 }
 
@@ -1365,10 +1366,12 @@ kbd {
 }
 
 .hub-mission-card {
-  display: flex;
+  display: grid;
+  grid-template-columns: 2.4rem 1fr 1.5rem;
   align-items: center;
   gap: 1rem;
-  padding: 1rem 1.25rem;
+  padding: 0.95rem 1.25rem;
+  min-height: 54px;
   background: var(--bg-card);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
@@ -1377,10 +1380,13 @@ kbd {
   border-radius: 6px;
   cursor: pointer;
   text-decoration: none;
+  text-align: left;
   transition: all var(--transition-fast);
   color: var(--text-primary);
   outline: none;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .hub-mission-card:hover,
@@ -1398,13 +1404,18 @@ kbd {
   font-weight: 700;
   color: var(--accent-red);
   letter-spacing: 1px;
+  text-align: left;
+  flex-shrink: 0;
+  width: 2.4rem;
 }
 
 .hub-card-content {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  align-items: flex-start;
+  text-align: left;
   min-width: 0;
+  width: 100%;
 }
 
 .hub-card-title {
@@ -1412,10 +1423,13 @@ kbd {
   font-size: 1.35rem;
   letter-spacing: 1.2px;
   color: #ffffff;
-  line-height: 1.1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: block;
+  width: 100%;
 }
 
 .hub-mission-card:hover .hub-card-title {
@@ -1429,9 +1443,13 @@ kbd {
   letter-spacing: 1px;
   color: var(--text-muted);
   margin-top: 3px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  display: block;
+  width: 100%;
+  line-height: 1.35;
 }
 
 .hub-card-arrow {
@@ -1440,6 +1458,7 @@ kbd {
   color: var(--text-muted);
   transition: transform var(--transition-fast), color var(--transition-fast);
   flex-shrink: 0;
+  justify-self: end;
 }
 
 .hub-mission-card:hover .hub-card-arrow {
@@ -2131,11 +2150,11 @@ kbd {
     gap: 0.5rem;
   }
 
-  /* Contrast Vignette on Mobile: Left-focused gradient so right artwork & character stay 100% visible */
+  /* Contrast Vignette on Mobile: Softened by 25% so right artwork & character stay vibrant */
   .bg-vignette {
     background: 
-      linear-gradient(to right, rgba(3, 5, 10, 0.88) 0%, rgba(3, 5, 10, 0.62) 48%, rgba(3, 5, 10, 0.1) 78%, rgba(3, 5, 10, 0.22) 100%),
-      linear-gradient(to bottom, rgba(3, 5, 10, 0.72) 0%, transparent 16%, transparent 84%, rgba(3, 5, 10, 0.82) 100%) !important;
+      linear-gradient(to right, rgba(3, 5, 10, 0.80) 0%, rgba(3, 5, 10, 0.52) 48%, rgba(3, 5, 10, 0.08) 78%, rgba(3, 5, 10, 0.16) 100%),
+      linear-gradient(to bottom, rgba(3, 5, 10, 0.55) 0%, transparent 18%, transparent 82%, rgba(3, 5, 10, 0.64) 100%) !important;
   }
 
   /* Compact Spider-Web Accents */
@@ -2316,71 +2335,119 @@ kbd {
      SUB-PAGES ON MOBILE (FULL SCREEN TOUCH SCROLLER)
      ------------------------------------------------------------------------ */
   .page-scroller {
-    padding: 0.8rem 1rem 3.5rem;
+    padding: 0 1rem 4rem; /* Exactly 16px horizontal page padding */
     width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Sticky Top Header on Mobile: Quick Escape at Any Scroll Depth */
+  /* 1. RESPONSIVE MOBILE SHARED PAGE HEADER (VERTICAL STACK) */
   .page-top-hud {
     position: sticky;
     top: 0;
-    z-index: 60;
-    background: rgba(4, 6, 12, 0.94);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
-    padding: 0.6rem 0;
-    margin-bottom: 1.2rem;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+    background: rgba(4, 7, 14, 0.96);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 0.75rem 0 0.65rem;
+    margin: 0 0 1.25rem 0;
     border-bottom: 1px solid rgba(255, 42, 59, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.65);
+    width: 100%;
+    box-sizing: border-box;
   }
 
+  /* Row 1: Full-width RETURN TO MAIN MENU / CATEGORY button */
   .back-to-menu-btn {
-    padding: 0.45rem 0.9rem;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-    min-height: 38px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 0.65rem 1rem;
+    font-size: 0.82rem;
+    letter-spacing: 1.2px;
+    min-height: 48px; /* Comfortable touch target */
+    border-radius: 6px;
+    box-sizing: border-box;
+    text-align: center;
     touch-action: manipulation;
   }
 
+  /* Row 2: Compact mission/category identifier, aligned consistently, never clipped */
   .page-hud-tag {
-    font-size: 0.64rem;
-    letter-spacing: 1.2px;
-    max-width: 150px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 100%;
+    font-size: 0.68rem;
+    letter-spacing: 1.5px;
+    color: var(--accent-cyan);
+    text-align: center;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.35;
+    padding: 0 4px;
+    box-sizing: border-box;
   }
 
+  /* Row 3: Page Hero, Titles & Subtitles with comfortable separation */
   .page-hero {
-    margin-bottom: 1.4rem;
+    margin-top: 0.4rem;
+    margin-bottom: 1.35rem;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .page-badge-row {
+    display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.6rem;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 0.7rem;
+    width: 100%;
   }
 
   .pill-badge {
-    font-size: 0.64rem;
-    padding: 0.25rem 0.6rem;
+    font-size: 0.62rem;
+    padding: 0.22rem 0.55rem;
   }
 
   .page-main-title {
-    font-size: clamp(1.85rem, 7.5vw, 2.4rem);
-    letter-spacing: 1.5px;
-    margin-bottom: 0.3rem;
+    font-size: clamp(1.45rem, 6vw, 2.05rem);
+    letter-spacing: 1.2px;
+    line-height: 1.18;
+    margin-bottom: 0.4rem;
+    color: #ffffff;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
   }
 
   .page-tagline {
-    font-size: 0.88rem;
-    letter-spacing: 1.5px;
-    margin-bottom: 0.8rem;
+    font-size: clamp(0.76rem, 3vw, 0.86rem);
+    letter-spacing: 1.2px;
+    line-height: 1.35;
+    margin-bottom: 0.75rem;
+    color: var(--accent-gold);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
   }
 
   .page-summary {
-    font-size: 0.92rem;
-    line-height: 1.55;
+    font-size: clamp(0.84rem, 3.4vw, 0.94rem);
+    line-height: 1.6;
+    color: var(--text-secondary);
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
   }
 
   /* Countdown Banner Mobile */
@@ -2426,66 +2493,237 @@ kbd {
     font-size: 0.64rem;
   }
 
-  /* Action Buttons on Mobile: Full-width touch friendly */
-  .cta-row-buttons {
-    flex-direction: column;
-    gap: 0.75rem;
-    width: 100%;
-  }
-
-  .action-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 0.8rem 1.2rem;
-    font-size: 0.88rem;
-    min-height: 44px;
-    touch-action: manipulation;
-  }
-
-  /* Track Cards & Timeline */
-  .section-title-hud {
-    font-size: 1.6rem;
-    margin-bottom: 1rem;
-  }
-
+  /* 3. STANDARDIZED SUBMENU BUTTONS ON MOBILE */
   .hub-card-grid {
     grid-template-columns: 1fr;
     gap: 0.75rem;
+    margin: 1rem 0 2rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .hub-mission-card {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr 1.25rem;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    min-height: 52px;
+    transform: none !important;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .hub-card-index {
+    font-size: 0.88rem;
+    width: 2.2rem;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  .hub-card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .hub-card-title {
+    font-size: clamp(1.05rem, 4vw, 1.2rem);
+    line-height: 1.22;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
+    display: block;
+  }
+
+  .hub-card-sub {
+    font-size: clamp(0.64rem, 2.6vw, 0.7rem);
+    line-height: 1.35;
+    text-align: left;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
+    margin-top: 3px;
+    display: block;
+  }
+
+  .hub-card-arrow {
+    width: 14px;
+    height: 14px;
+    justify-self: end;
+    flex-shrink: 0;
+  }
+
+  /* 4. DEDICATED INFORMATION PAGES & COMPONENTS ON MOBILE */
+  .info-section-group {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    margin-bottom: 2rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .info-card {
+    padding: 1.15rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .info-card-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.4rem;
+    margin-bottom: 0.65rem;
+    padding-bottom: 0.4rem;
+  }
+
+  .info-card-title {
+    font-size: clamp(1.15rem, 4.8vw, 1.4rem);
+    letter-spacing: 1px;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .info-card-tag {
+    font-size: 0.64rem;
+  }
+
+  .info-card-text {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .info-grid-2,
   .info-grid-3 {
+    display: grid;
     grid-template-columns: 1fr;
-    gap: 0.8rem;
+    gap: 0.85rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
+  .checklist-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .checklist-item {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.86rem;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .section-title-hud {
+    font-size: clamp(1.3rem, 5.5vw, 1.6rem);
+    margin-bottom: 0.85rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Tracks Card Grid Mobile */
   .tracks-card-grid {
+    display: grid;
     grid-template-columns: 1fr;
-    gap: 0.9rem;
+    gap: 0.85rem;
     margin-bottom: 1.8rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .track-card {
     padding: 1.1rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .tc-title {
     font-size: 1.05rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .tc-desc {
+    font-size: 0.86rem;
+    line-height: 1.55;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* Journey Step Rows in Story Mode */
+  .journey-step-row {
+    display: grid;
+    grid-template-columns: 2.2rem 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+    transform: none !important;
+  }
+
+  .journey-step-num {
+    width: 2.2rem;
+    text-align: center;
+    padding: 4px 0;
+    box-sizing: border-box;
+  }
+
+  .journey-step-content {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .journey-step-title {
+    font-size: 0.98rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  .journey-step-desc {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   /* Daily Bugle Mobile */
   .bugle-newspaper-box {
-    padding: 1.4rem 1.1rem;
+    padding: 1.3rem 1rem;
     margin-bottom: 1.8rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .bugle-top-bar {
     font-size: 0.72rem;
+    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .bugle-masthead {
-    font-size: 2.3rem;
+    font-size: clamp(1.8rem, 7vw, 2.3rem);
     letter-spacing: 2px;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .bugle-sub-masthead {
@@ -2494,18 +2732,25 @@ kbd {
   }
 
   .bugle-headline {
-    font-size: 1.55rem;
-    margin-bottom: 1rem;
+    font-size: clamp(1.3rem, 5.5vw, 1.55rem);
+    margin-bottom: 0.85rem;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .bugle-editorial-cols {
+    display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .bugle-editorial-cols p {
-    font-size: 0.92rem;
+    font-size: 0.9rem;
     line-height: 1.55;
+    overflow-wrap: break-word;
+    word-break: break-word;
   }
 
   .bugle-cta-strip {
@@ -2513,19 +2758,62 @@ kbd {
     gap: 0.5rem;
     text-align: center;
     padding: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
-  /* Crunch Mode & Chill Cards */
+  /* Crunch Mode & Chill Cards Mobile */
   .terminal-panel-grid,
   .chill-features-grid {
+    display: grid;
     grid-template-columns: 1fr;
     gap: 1rem;
     margin-bottom: 1.8rem;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .tp-box,
   .chill-card {
-    padding: 1.2rem;
+    padding: 1.15rem 1rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* Action Buttons Mobile: Full width touch friendly >= 48px */
+  .cta-row-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .action-btn {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0.8rem 1.2rem;
+    font-size: 0.88rem;
+    min-height: 48px; /* >= 48px comfortable touch target */
+    touch-action: manipulation;
+    box-sizing: border-box;
+    text-align: center;
+  }
+
+  /* Global Container Constraint: Strictly No Horizontal Scrolling */
+  .pages-overlay-container,
+  .detail-page,
+  .page-scroller,
+  .page-hero,
+  .hub-card-grid,
+  .info-section-group,
+  .terminal-panel-grid,
+  .chill-features-grid {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
   /* Exit Dialog Mobile */
@@ -2696,6 +2984,38 @@ kbd {
 }
 
 /* ==========================================================================
+   GENTLE SUB-PAGE FADE TRANSITION OVERLAY (1-SEC TRANSITION FOR SUB-BUTTONS)
+   ========================================================================== */
+.subpage-fade-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 9200;
+  background: radial-gradient(circle at 50% 50%, rgba(10, 15, 26, 0.82) 0%, rgba(3, 5, 10, 0.88) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.42s;
+  will-change: opacity;
+}
+
+.subpage-fade-overlay.active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.subpage-fade-overlay.fading-out {
+  opacity: 0;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ==========================================================================
    11. AAA CINEMATIC MISSION DISPATCH & PAGE TRANSITION SCREEN
    ========================================================================== */
 .mission-transition-screen {
@@ -2762,7 +3082,7 @@ kbd {
 .transition-cinematic-bg {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, rgba(14, 25, 45, 0.4) 0%, rgba(3, 5, 9, 0.88) 85%);
+  background: radial-gradient(circle at center, rgba(14, 25, 45, 0.28) 0%, rgba(3, 5, 9, 0.65) 85%);
   z-index: 2;
   pointer-events: none;
 }
@@ -2787,7 +3107,7 @@ kbd {
 .transition-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 35%, rgba(2, 4, 8, 0.7) 75%, rgba(2, 4, 8, 0.98) 100%);
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(2, 4, 8, 0.48) 78%, rgba(2, 4, 8, 0.72) 100%);
   z-index: 3;
 }
 
@@ -2951,4 +3271,95 @@ kbd {
   display: flex;
   align-items: center;
   gap: 16px;
+}
+
+/* ==========================================================================
+   RESPONSIVE MISSION TRANSITION HUD (PREVENTS CUT-OFF ON MOBILE SCREENSHOT 2)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .transition-dock-right {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    right: 16px;
+    max-width: calc(100vw - 32px);
+    padding: 8px 14px;
+    gap: 10px;
+    z-index: 25;
+    box-sizing: border-box;
+  }
+
+  .transition-dock-right .loader-telemetry {
+    min-width: 0;
+    max-width: 130px;
+  }
+
+  .transition-dock-right .loader-telemetry-title {
+    font-size: 0.65rem;
+    letter-spacing: 0.6px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .transition-dock-right .loader-telemetry-sub {
+    font-size: 0.54rem;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .transition-dock-right .loader-circle-box {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .transition-dock-right .loader-circle-svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .transition-dock-right .loader-pct-value {
+    font-size: 1.35rem;
+  }
+
+  .transition-bottom-actions {
+    bottom: max(16px, env(safe-area-inset-bottom, 16px));
+    left: 16px;
+    z-index: 25;
+  }
+
+  .transition-skip-btn {
+    padding: 6px 10px;
+    font-size: 0.68rem;
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .transition-dock-right .loader-telemetry {
+    display: none; /* Hide verbose telemetry so circular progress & % never clip */
+  }
+
+  .transition-bottom-actions {
+    top: max(14px, env(safe-area-inset-top, 14px));
+    bottom: auto;
+    left: 14px;
+  }
+
+  .transition-dock-right {
+    bottom: max(14px, env(safe-area-inset-bottom, 14px));
+    right: 14px;
+    padding: 8px 12px;
+  }
+
+  .transition-center-hud {
+    padding: 0 16px;
+    max-width: 100vw;
+  }
+
+  .transition-dest-title {
+    font-size: clamp(1.8rem, 8vw, 2.4rem);
+    letter-spacing: 2px;
+  }
 }
